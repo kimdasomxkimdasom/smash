@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- 가스 토치 (직접 그림). 세로로 그린 뒤 -45° 돌려서 노즐이 왼쪽 위 -->
+  <g transform="rotate(-45 256 256)" stroke="#1a1a1a" stroke-width="22" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M256 96c-38-22-34-62 0-90 34 28 38 68 0 90z" fill="#ff7a2e" />
+    <path d="M256 92c-16-12-14-32 0-48 14 16 16 36 0 48z" fill="#ffd23f" stroke="none" />
+    <rect x="240" y="116" width="32" height="124" fill="#c4c4d0" />
+    <rect x="228" y="94" width="56" height="34" rx="8" fill="#8a8a96" />
+    <circle cx="334" cy="258" r="20" fill="#ffcf3f" />
+    <rect x="206" y="228" width="100" height="62" rx="12" fill="#3b3b40" />
+    <rect x="194" y="282" width="124" height="190" rx="28" fill="#e0412b" />
+    <rect x="194" y="336" width="124" height="52" fill="#f4efe2" />
+    <path d="M222 302v20" stroke="#ff8a7a" stroke-width="14" />
+  </g>
+</svg>

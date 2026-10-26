@@ -16,10 +16,10 @@ function drawMonitor(ctx: CanvasRenderingContext2D, part: Part, damage: number, 
   const s = screenOf(r)
 
   // 테두리
-  ctx.fillStyle = '#2a2c33'
+  ctx.fillStyle = '#d8d2c4' // 본체와 같은 베이지
   roundRect(ctx, r, 9)
   ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)'
+  ctx.strokeStyle = 'rgba(0,0,0,0.18)'
   ctx.lineWidth = 2
   ctx.stroke()
 
@@ -91,11 +91,11 @@ function drawMonitor(ctx: CanvasRenderingContext2D, part: Part, damage: number, 
 
 function drawStand(ctx: CanvasRenderingContext2D, part: Part) {
   const r = part.rect
-  ctx.fillStyle = '#3a3d45'
+  ctx.fillStyle = '#c9c2b2'
   ctx.fillRect(r.x + r.w / 2 - 14, r.y, 28, r.h - 10) // 목
   roundRect(ctx, { x: r.x, y: r.y + r.h - 12, w: r.w, h: 12 }, 5) // 받침
   ctx.fill()
-  ctx.fillStyle = 'rgba(255,255,255,0.07)'
+  ctx.fillStyle = 'rgba(255,255,255,0.3)'
   ctx.fillRect(r.x + r.w / 2 - 14, r.y, 5, r.h - 10)
 }
 
@@ -137,7 +137,7 @@ function drawTower(ctx: CanvasRenderingContext2D, part: Part, damage: number, ti
 
 function drawKeyboard(ctx: CanvasRenderingContext2D, part: Part, damage: number) {
   const r = part.rect
-  ctx.fillStyle = '#2f3239'
+  ctx.fillStyle = '#d8d2c4'
   roundRect(ctx, r, 5)
   ctx.fill()
 
@@ -152,7 +152,7 @@ function drawKeyboard(ctx: CanvasRenderingContext2D, part: Part, damage: number)
       const x = r.x + 6 + col * kw
       const y = r.y + 4 + row * kh
       const missing = rnd() < damage * 0.9
-      ctx.fillStyle = missing ? '#15171b' : '#4a4e57'
+      ctx.fillStyle = missing ? '#2a2620' : '#ece7dc'
       ctx.fillRect(x + 0.8, y + 0.8, kw - 1.6, kh - 1.6)
     }
   }
@@ -171,7 +171,7 @@ export const computer: Target = {
         name: '모니터 받침',
         rect: { x: 96, y: g - 74, w: 100, h: 86 },
         maxHp: 45,
-        debrisColors: ['#3a3d45', '#25272d'],
+        debrisColors: ['#d8d2c4', '#c9c2b2'],
         materialAt: () => 'plastic',
         draw: drawStand,
       }),
@@ -180,7 +180,7 @@ export const computer: Target = {
         name: '모니터',
         rect: monitorRect,
         maxHp: 130,
-        debrisColors: ['#2a2c33', '#1d1f24', '#9fd3ff', '#cfe9ff', '#5a7bd8'],
+        debrisColors: ['#d8d2c4', '#b9b1a0', '#9fd3ff', '#cfe9ff', '#5a7bd8'],
         materialAt: (p) => (inside(p, screenOf(monitorRect)) ? 'glass' : 'plastic'),
         draw: drawMonitor,
       }),
@@ -198,7 +198,7 @@ export const computer: Target = {
         name: '키보드',
         rect: { x: 44, y: g + 16, w: 214, h: 22 },
         maxHp: 60,
-        debrisColors: ['#2f3239', '#4a4e57', '#e8e8e8'],
+        debrisColors: ['#d8d2c4', '#ece7dc', '#b9b1a0'],
         materialAt: () => 'plastic',
         draw: drawKeyboard,
       }),
@@ -249,8 +249,6 @@ export const computer: Target = {
     ctx.fillRect(364, g + 62, 14, floorY - g - 62)
   },
 
-  surfaces: ({ W, groundY: g, floorY }) => [
-    { x: 8, y: g + 40, w: 384, h: 22 }, // 책상 앞쪽 (파편이 쌓이는 곳)
-    { x: 0, y: floorY, w: W, h: 400 },
-  ],
+  // 파편은 책상에 쌓이지 않고 바닥까지 떨어짐 (책상에 쌓이면 키보드가 가려짐)
+  surfaces: ({ W, floorY }) => [{ x: 0, y: floorY, w: W, h: 400 }],
 }

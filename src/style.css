@@ -25,6 +25,7 @@ body {
 }
 
 #app {
+  visibility: visible; /* index.html에서 CSS 오기 전엔 숨겨 둠 */
   position: relative;
   max-width: 480px;
   height: 100dvh;

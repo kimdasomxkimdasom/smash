@@ -24,6 +24,7 @@ function loadImage(file: string) {
 const TOOL_SPRITES = {
   hammer: { image: loadImage('hammer.svg'), size: 130, head: { x: 358, y: 195 }, grip: { x: 127, y: 385 } },
   bat: { image: loadImage('baseball-bat.svg'), size: 150, head: { x: 167, y: 167 }, grip: { x: 395, y: 395 } },
+  flame: { image: loadImage('torch.svg'), size: 130, head: { x: 140, y: 140 }, grip: { x: 407, y: 407 } }, // head = 노즐 끝
 }
 
 const TOOLS = {
@@ -283,7 +284,7 @@ export class Game {
   // 손가락 위치에 도구 그리기 (때릴 때 휘두르는 각도)
   private drawTool() {
     const at = this.pointer ?? (this.swing > 0 ? this.lastStrike : null)
-    if (!at || this.tool === 'flame') return
+    if (!at) return
     const { ctx } = this
     const { x, y } = at
     const sprite = TOOL_SPRITES[this.tool]
@@ -293,7 +294,8 @@ export class Game {
     const k = sprite.size / 512
     ctx.save()
     ctx.translate(x + (sprite.grip.x - sprite.head.x) * k, y + (sprite.grip.y - sprite.head.y) * k)
-    ctx.rotate((1 - this.swing) * 0.5)
+    // 토치는 휘두르지 않고 살짝 떨리기만
+    ctx.rotate(this.tool === 'flame' ? rand(-0.02, 0.02) : (1 - this.swing) * 0.5)
     ctx.drawImage(sprite.image, -sprite.grip.x * k, -sprite.grip.y * k, 512 * k, 512 * k)
     ctx.restore()
   }

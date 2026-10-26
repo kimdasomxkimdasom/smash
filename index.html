@@ -4,9 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#1b1d24" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔨</text></svg>" />
+    <link rel="icon" type="image/svg+xml" href="tools/hammer.svg" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
     <title>SMASH! 스트레스 풀기</title>
+    <!-- CSS(style.css)가 JS로 늦게 들어오기 전에도 화면이 깨지지 않게 최소한만 먼저 -->
+    <style>
+      html, body { margin: 0; background: #1b1d24; }
+      #app { visibility: hidden; } /* style.css가 들어오면 보이게 바뀜 */
+    </style>
   </head>
   <body>
     <div id="app">
@@ -24,14 +29,17 @@
       <!-- 아래: 도구 선택 -->
       <nav id="tools">
         <button data-tool="hammer" class="active">
-          <img class="tool-icon" src="tools/hammer.svg" alt="" />
+          <img class="tool-icon" src="tools/hammer.svg" width="32" height="32" alt="" />
           망치
         </button>
         <button data-tool="bat">
-          <img class="tool-icon" src="tools/baseball-bat.svg" alt="" />
+          <img class="tool-icon" src="tools/baseball-bat.svg" width="32" height="32" alt="" />
           방망이
         </button>
-        <button data-tool="flame"><span>🧨</span>화염</button>
+        <button data-tool="flame">
+          <img class="tool-icon" src="tools/torch.svg" width="32" height="32" alt="" />
+          화염
+        </button>
       </nav>
 
       <!-- 시작 화면 -->
