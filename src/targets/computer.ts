@@ -141,7 +141,8 @@ function drawKeyboard(ctx: CanvasRenderingContext2D, part: Part, damage: number)
   roundRect(ctx, r, 5)
   ctx.fill()
 
-  // 키캡 — 망가질수록 빠진 키(구멍)가 늘어남
+  // 키캡 — 때린 자리 근처 키는 바로 빠지고(구멍), 망가질수록 다른 키도 랜덤으로 빠짐
+  const hits = part.marks.filter((m) => m.kind === 'dent')
   const rnd = seeded(7)
   const cols = 14
   const rows = 3
@@ -151,7 +152,10 @@ function drawKeyboard(ctx: CanvasRenderingContext2D, part: Part, damage: number)
     for (let col = 0; col < cols; col++) {
       const x = r.x + 6 + col * kw
       const y = r.y + 4 + row * kh
-      const missing = rnd() < damage * 0.9
+      const cx = x + kw / 2
+      const cy = y + kh / 2
+      const hitNear = hits.some((m) => Math.abs(m.x - cx) < kw * 0.9 + m.r * 0.3 && Math.abs(m.y - cy) < kh * 1.2)
+      const missing = rnd() < damage * 0.9 || hitNear
       ctx.fillStyle = missing ? '#2a2620' : '#ece7dc'
       ctx.fillRect(x + 0.8, y + 0.8, kw - 1.6, kh - 1.6)
     }
@@ -197,7 +201,7 @@ export const computer: Target = {
         id: 'keyboard',
         name: '키보드',
         rect: { x: 44, y: g + 16, w: 214, h: 22 },
-        maxHp: 60,
+        maxHp: 45,
         debrisColors: ['#d8d2c4', '#ece7dc', '#b9b1a0'],
         materialAt: () => 'plastic',
         draw: drawKeyboard,
