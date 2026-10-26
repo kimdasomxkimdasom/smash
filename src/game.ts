@@ -15,6 +15,17 @@ const MATERIALS: Record<Material, { crack: string | null; debris: string[] | nul
   rubber: { crack: null, debris: null, sparks: 0, sound: playBoing },
 }
 
+// 도구 그림 (public/tools/*.svg, 직접 그림, 512×512). head = 때리는 부분, grip = 손잡이 끝 (그림 속 좌표)
+function loadImage(file: string) {
+  const image = new Image()
+  image.src = `${import.meta.env.BASE_URL}tools/${file}`
+  return image
+}
+const TOOL_SPRITES = {
+  hammer: { image: loadImage('hammer.svg'), size: 130, head: { x: 358, y: 195 }, grip: { x: 127, y: 385 } },
+  bat: { image: loadImage('baseball-bat.svg'), size: 150, head: { x: 167, y: 167 }, grip: { x: 395, y: 395 } },
+}
+
 const TOOLS = {
   hammer: { damage: 8, repeatMs: 150, debris: [2, 4], debrisSize: [2, 4.5], power: 7, shake: 5, vibrate: 12 },
   bat: { damage: 20, repeatMs: 280, debris: [7, 12], debrisSize: [3, 7], power: 11, shake: 11, vibrate: 35 },
@@ -275,13 +286,16 @@ export class Game {
     if (!at || this.tool === 'flame') return
     const { ctx } = this
     const { x, y } = at
+    const sprite = TOOL_SPRITES[this.tool]
+    if (!sprite.image.complete) return
+    // 머리(망치 쇠, 방망이 굵은 곳)가 손가락 위치에 오도록 손잡이를 축으로 그리기
+    // 때린 직후(swing=1)엔 내려친 자세, 시간이 지나면 뒤로 젖혀짐
+    const k = sprite.size / 512
     ctx.save()
-    ctx.translate(x + 18, y - 18)
-    ctx.rotate(-0.9 + this.swing * 1.1)
-    ctx.font = this.tool === 'bat' ? '50px sans-serif' : '42px sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(this.tool === 'bat' ? '🏏' : '🔨', 0, 0)
+    ctx.translate(x + (sprite.grip.x - sprite.head.x) * k, y + (sprite.grip.y - sprite.head.y) * k)
+    ctx.rotate((1 - this.swing) * 0.5)
+    ctx.drawImage(sprite.image, -sprite.grip.x * k, -sprite.grip.y * k, 512 * k, 512 * k)
     ctx.restore()
   }
 }
+

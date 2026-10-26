@@ -98,6 +98,11 @@ body {
   font-weight: 700;
 }
 
+#tools button .tool-icon {
+  width: 32px;
+  height: 32px;
+}
+
 #tools button span {
   font-size: 24px;
   line-height: 1.1;

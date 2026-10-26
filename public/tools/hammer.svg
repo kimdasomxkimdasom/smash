@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- 망치(장도리, 직접 그림). 세로로 그린 뒤 45° 돌려서 쇠머리가 오른쪽 위 -->
+  <g transform="rotate(45 256 256) translate(256 256) scale(0.85) translate(-256 -256)" stroke="#1a1a1a" stroke-width="22" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="230" y="170" width="52" height="140" fill="#dcdce8" />
+    <rect x="218" y="292" width="76" height="182" rx="32" fill="#e8994d" />
+    <path d="M240 330v40M272 400v34M240 412v18" stroke-width="14" />
+    <path d="M216 74c-64 0-104 38-112 96l38 8c8-34 34-52 74-48z" fill="#8a8a96" />
+    <rect x="200" y="72" width="186" height="96" rx="16" fill="#8a8a96" />
+    <rect x="378" y="56" width="48" height="128" rx="14" fill="#6f6f7b" />
+    <path d="M226 98h130" stroke="#b4b4c0" stroke-width="14" />
+  </g>
+</svg>

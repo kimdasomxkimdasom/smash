@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- 야구 방망이 (직접 그림). 세로로 그린 뒤 -45° 돌려서 굵은 끝이 왼쪽 위 -->
+  <g transform="rotate(-45 256 256)" stroke="#1a1a1a" stroke-width="22" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M198 100a58 58 0 0 1 116 0v95c-8 75-38 120-40 170v75h-36v-75c-2-50-32-95-40-170z" fill="#ffb14e" />
+    <path d="M222 92a30 30 0 0 1 22-24v120c-8 40-16 70-18 92" fill="none" stroke="#ffd59a" stroke-width="16" />
+    <rect x="238" y="372" width="36" height="72" fill="#a0682e" />
+    <ellipse cx="256" cy="456" rx="46" ry="19" fill="#ff5a3c" />
+  </g>
+</svg>
