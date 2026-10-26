@@ -1,8 +1,8 @@
-import { playBoing, playClang, playCrash, playGlass, playThud, startFlame, stopFlame, vibrate } from './audio'
+import { playBoing, playCeramic, playClang, playCrash, playGlass, playPaper, playThud, startAlarm, startFlame, stopAlarm, stopFlame, vibrate } from './audio'
 import { DebrisWorld, Particles } from './effects'
 import { drawMarks, makeCrack } from './marks'
 import { rand } from './random'
-import type { Layout, Material, Part, Point, Target, ToolId } from './types'
+import type { Fx, Layout, Material, Part, Point, Target, ToolId } from './types'
 
 const WORLD_W = 400
 
@@ -13,7 +13,13 @@ const MATERIALS: Record<Material, { crack: string | null; debris: string[] | nul
   plastic: { crack: 'rgba(0, 0, 0, 0.55)', debris: null, sparks: 1, sound: (s) => (s > 0.8 ? playCrash(0.7) : playThud(0.8)) },
   metal: { crack: 'rgba(230, 230, 235, 0.75)', debris: null, sparks: 2.2, sound: playClang }, // 긁힌 자국
   rubber: { crack: null, debris: null, sparks: 0, sound: playBoing },
+  ceramic: { crack: 'rgba(0, 0, 0, 0.5)', debris: null, sparks: 0.3, sound: playCeramic },
+  paper: { crack: null, debris: null, sparks: 0, sound: playPaper },
 }
+
+const ASH = ['#1a1a1a', '#3a3a3a', '#6b6b6b'] // 타고 남은 재
+
+type Decal = { x: number; y: number; rx: number; ry: number; color: string }
 
 // 도구 그림 (public/tools/*.svg, 직접 그림, 512×512). head = 때리는 부분, grip = 손잡이 끝 (그림 속 좌표)
 function loadImage(file: string) {
@@ -33,7 +39,13 @@ const TOOLS = {
   flame: { damagePerSec: 26 },
 } as const
 
-export type GameStats = { percent: number; seconds: number; hits: number; finished: boolean }
+export type GameStats = {
+  percent: number
+  seconds: number
+  hits: number
+  finished: boolean
+  bonus: { done: number; total: number } // 소품 몇 개 해치웠나
+}
 
 export class Game {
   private ctx: CanvasRenderingContext2D
@@ -42,6 +54,8 @@ export class Game {
   private parts: Part[] = []
   private debris = new DebrisWorld()
   private particles = new Particles()
+  private decals: Decal[] = [] // 커피 얼룩 등 바닥에 남는 자국
+  private alarmUntil = 0
 
   tool: ToolId = 'hammer'
   private pointer: Point | null = null // 누르고 있는 위치 (월드 좌표)
@@ -91,6 +105,9 @@ export class Game {
     this.parts = this.target.createParts(this.layout)
     this.debris.clear()
     this.particles.clear()
+    this.decals = []
+    this.alarmUntil = 0
+    stopAlarm()
     this.hits = 0
     this.startedAt = performance.now()
     this.finishedAt = 0
@@ -139,6 +156,20 @@ export class Game {
     return null
   }
 
+  // 부품(소품)이 부르는 효과
+  private get fx(): Fx {
+    return {
+      now: performance.now(),
+      stain: (x, y, rx, ry, color) => this.decals.push({ x, y, rx, ry, color }),
+      splash: (at, color, count) => this.particles.drops(at, color, count),
+      alarm: (seconds) => {
+        if (performance.now() < this.alarmUntil) return // 이미 울리는 중
+        this.alarmUntil = performance.now() + seconds * 1000
+        startAlarm(seconds)
+      },
+    }
+  }
+
   // 망치·방망이 한 번 때리기
   private strike(at: Point) {
     if (this.tool === 'flame') return
@@ -169,6 +200,7 @@ export class Game {
     this.shake = Math.max(this.shake, tool.shake)
     vibrate(tool.vibrate)
 
+    part.onHit?.(this.fx, at)
     this.damage(part, tool.damage * rand(0.85, 1.15), at)
   }
 
@@ -185,6 +217,23 @@ export class Game {
     const r = part.rect
     const center = { x: r.x + r.w / 2, y: r.y + r.h / 2 }
     const size = Math.sqrt(r.w * r.h)
+
+    // 소품은 작게: 태웠으면 재로 날리고, 때렸으면 조각만
+    if (part.bonus) {
+      const byFlame = this.tool === 'flame'
+      if (byFlame && part.materialAt(center) === 'paper') {
+        this.debris.spawn(center, ASH, 6, [1.5, 3], 3)
+        for (let i = 0; i < 4; i++) this.particles.fire({ x: center.x + rand(-6, 6), y: center.y + rand(-6, 6) })
+        this.particles.smoke(center, 3)
+      } else {
+        this.debris.spawn(center, part.debrisColors, Math.round(size / 4), [size / 14, size / 7], 8)
+        MATERIALS[part.materialAt(center)].sound(1)
+      }
+      part.onDestroy?.(this.fx, byFlame)
+      this.emitStats()
+      return
+    }
+
     this.debris.spawn(center, part.debrisColors, Math.round(size / 6), [size / 22, size / 11], 9)
     this.debris.spawn(at, part.debrisColors, 10, [2, 5], 12)
     this.particles.smoke(center, 8)
@@ -201,9 +250,12 @@ export class Game {
       if (child.attachedTo === part.id && !child.destroyed) this.destroy(child, { x: child.rect.x + child.rect.w / 2, y: child.rect.y + child.rect.h / 2 })
     }
 
-    if (this.parts.every((p) => p.destroyed)) {
+    part.onDestroy?.(this.fx, this.tool === 'flame')
+
+    if (this.parts.every((p) => p.destroyed || p.bonus)) {
       this.finishedAt = performance.now()
       stopFlame()
+      stopAlarm()
       this.pointer = null
     }
   }
@@ -221,19 +273,23 @@ export class Game {
       const burns = part.marks.filter((m) => m.kind === 'burn')
       if (burns.length > 80) part.marks.splice(part.marks.indexOf(burns[0]), 1)
       if (Math.random() < 0.15) this.debris.spawn(at, ['#1a1a1a', '#3a2a1a'], 1, [1.5, 3], 3)
+      if (part.materialAt(at) === 'paper') part.onHit?.(this.fx, at)
     }
     this.damage(part, (TOOLS.flame.damagePerSec * dt) / 1000, at)
   }
 
   get stats(): GameStats {
-    const total = this.parts.reduce((sum, p) => sum + p.maxHp, 0)
-    const dealt = this.parts.reduce((sum, p) => sum + (p.maxHp - Math.max(p.hp, 0)), 0)
+    const main = this.parts.filter((p) => !p.bonus)
+    const props = this.parts.filter((p) => p.bonus)
+    const total = main.reduce((sum, p) => sum + p.maxHp, 0)
+    const dealt = main.reduce((sum, p) => sum + (p.maxHp - Math.max(p.hp, 0)), 0)
     const end = this.finishedAt || (this.running ? performance.now() : this.startedAt)
     return {
       percent: Math.min(100, Math.floor((dealt / total) * 100)),
       seconds: this.running ? (end - this.startedAt) / 1000 : 0,
       hits: this.hits,
       finished: this.finishedAt > 0,
+      bonus: { done: props.filter((p) => p.destroyed).length, total: props.length },
     }
   }
 
@@ -269,9 +325,16 @@ export class Game {
     if (this.shake > 0.3) ctx.translate(rand(-this.shake, this.shake), rand(-this.shake, this.shake))
 
     this.target.drawBackground(ctx, this.layout)
+    for (const d of this.decals) {
+      ctx.fillStyle = d.color
+      ctx.beginPath()
+      ctx.ellipse(d.x, d.y, d.rx, d.ry, 0, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    const scene = { alarming: performance.now() < this.alarmUntil } // 차 경보 중이면 라이트 깜빡임
     for (const part of this.parts) {
       if (part.destroyed) continue
-      part.draw(ctx, part, 1 - part.hp / part.maxHp, time)
+      part.draw(ctx, part, 1 - part.hp / part.maxHp, time, scene)
       drawMarks(ctx, part)
     }
     this.debris.draw(ctx)

@@ -81,6 +81,46 @@ export function playBoing(strength = 1) {
   tone('sine', 110, 70, 0.55 * strength, 0.22)
 }
 
+// 종이 바스락 (포스트잇)
+export function playPaper() {
+  noise('highpass', 3500, 0.6, 0.25, 0.12)
+}
+
+// 도자기 챙그랑 (커피잔) — 유리보다 낮고 짧게
+export function playCeramic(strength = 1) {
+  noise('bandpass', 1800, 1, 0.45 * strength, 0.18)
+  for (let i = 0; i < 3; i++) tone('triangle', 1200 + Math.random() * 1500, 900, 0.07, 0.12, Math.random() * 0.08)
+}
+
+// 자동차 경보음: 삐뽀삐뽀 (두 음 번갈아)
+let alarm: { osc: OscillatorNode; gain: GainNode } | null = null
+
+export function startAlarm(seconds: number) {
+  if (!ctx || !master) return
+  stopAlarm()
+  const osc = ctx.createOscillator()
+  osc.type = 'square'
+  const gain = ctx.createGain()
+  const t = ctx.currentTime
+  for (let i = 0; i < seconds * 4; i++) osc.frequency.setValueAtTime(i % 2 ? 660 : 880, t + i * 0.25)
+  gain.gain.setValueAtTime(0.08, t)
+  gain.gain.setValueAtTime(0.08, t + seconds - 0.05)
+  gain.gain.linearRampToValueAtTime(0, t + seconds)
+  osc.connect(gain).connect(master)
+  osc.start(t)
+  osc.stop(t + seconds)
+  alarm = { osc, gain }
+  osc.onended = () => {
+    if (alarm?.osc === osc) alarm = null
+  }
+}
+
+export function stopAlarm() {
+  if (!alarm) return
+  alarm.osc.stop()
+  alarm = null
+}
+
 // 크게 와장창 (방망이, 부품 박살)
 export function playCrash(strength = 1) {
   playThud(strength)
