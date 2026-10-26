@@ -32,8 +32,11 @@
       <section id="start" class="overlay">
         <h1>SMASH!</h1>
         <p class="sub">스트레스 풀기</p>
-        <p class="desc">말 안 듣는 컴퓨터를<br />마음껏 부숴 보세요</p>
-        <button id="start-btn">부수러 가기</button>
+        <p class="desc">오늘은 뭘 부숴 볼까요?</p>
+        <div class="targets">
+          <button data-target="computer"><span>🖥️</span>컴퓨터</button>
+          <button data-target="car"><span>🚗</span>자동차</button>
+        </div>
         <p class="hint">탭: 때리기 · 꾹 누르기: 연타 · 화염은 누른 채로 문지르기</p>
       </section>
 
@@ -41,7 +44,10 @@
       <section id="result" class="overlay hidden">
         <h2>박살 완료!</h2>
         <p id="result-text"></p>
-        <button id="again-btn">다시 부수기</button>
+        <div class="result-actions">
+          <button id="again-btn">다시 부수기</button>
+          <button id="home-btn" class="secondary">다른 거 부수기</button>
+        </div>
       </section>
     </div>
     <script type="module" src="/src/main.ts"></script>

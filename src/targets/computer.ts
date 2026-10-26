@@ -172,7 +172,7 @@ export const computer: Target = {
         rect: { x: 96, y: g - 74, w: 100, h: 86 },
         maxHp: 45,
         debrisColors: ['#3a3d45', '#25272d'],
-        isGlass: () => false,
+        materialAt: () => 'plastic',
         draw: drawStand,
       }),
       make({
@@ -181,7 +181,7 @@ export const computer: Target = {
         rect: monitorRect,
         maxHp: 130,
         debrisColors: ['#2a2c33', '#1d1f24', '#9fd3ff', '#cfe9ff', '#5a7bd8'],
-        isGlass: (p) => inside(p, screenOf(monitorRect)),
+        materialAt: (p) => (inside(p, screenOf(monitorRect)) ? 'glass' : 'plastic'),
         draw: drawMonitor,
       }),
       make({
@@ -190,7 +190,7 @@ export const computer: Target = {
         rect: { x: 286, y: g - 194, w: 90, h: 210 },
         maxHp: 150,
         debrisColors: ['#d8d2c4', '#b9b1a0', '#2e7d4f', '#c9a227', '#555'],
-        isGlass: () => false,
+        materialAt: () => 'plastic',
         draw: drawTower,
       }),
       make({
@@ -199,7 +199,7 @@ export const computer: Target = {
         rect: { x: 44, y: g + 16, w: 214, h: 22 },
         maxHp: 60,
         debrisColors: ['#2f3239', '#4a4e57', '#e8e8e8'],
-        isGlass: () => false,
+        materialAt: () => 'plastic',
         draw: drawKeyboard,
       }),
     ]

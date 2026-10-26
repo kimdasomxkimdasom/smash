@@ -66,6 +66,21 @@ export function playGlass(strength = 1) {
   }
 }
 
+// 쇠 깡! (자동차 차체) — 울리는 금속음
+export function playClang(strength = 1) {
+  const base = 300 + Math.random() * 250
+  for (const [ratio, vol] of [[1, 0.22], [2.76, 0.12], [5.4, 0.07]] as const) {
+    tone('triangle', base * ratio, base * ratio * 0.97, vol * strength, 0.35 + strength * 0.3)
+  }
+  noise('bandpass', 3000, 1.2, 0.25 * strength, 0.08)
+  tone('sine', 120, 50, 0.4 * strength, 0.15)
+}
+
+// 고무 퉁 (타이어)
+export function playBoing(strength = 1) {
+  tone('sine', 110, 70, 0.55 * strength, 0.22)
+}
+
 // 크게 와장창 (방망이, 부품 박살)
 export function playCrash(strength = 1) {
   playThud(strength)

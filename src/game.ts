@@ -1,12 +1,20 @@
-import { playCrash, playGlass, playThud, startFlame, stopFlame, vibrate } from './audio'
+import { playBoing, playClang, playCrash, playGlass, playThud, startFlame, stopFlame, vibrate } from './audio'
 import { DebrisWorld, Particles } from './effects'
 import { drawMarks, makeCrack } from './marks'
 import { rand } from './random'
-import type { Layout, Part, Point, Target, ToolId } from './types'
+import type { Layout, Material, Part, Point, Target, ToolId } from './types'
 
 const WORLD_W = 400
 
 // 도구별 손맛
+// 재질별: 금 색깔(null이면 금 없음), 파편 색(null이면 부품 색), 소리
+const MATERIALS: Record<Material, { crack: string | null; debris: string[] | null; sparks: number; sound: (strength: number) => void }> = {
+  glass: { crack: 'rgba(235, 245, 255, 0.9)', debris: ['#cfe9ff', '#9fd3ff', '#ffffff'], sparks: 0.5, sound: playGlass },
+  plastic: { crack: 'rgba(0, 0, 0, 0.55)', debris: null, sparks: 1, sound: (s) => (s > 0.8 ? playCrash(0.7) : playThud(0.8)) },
+  metal: { crack: 'rgba(230, 230, 235, 0.75)', debris: null, sparks: 2.2, sound: playClang }, // 긁힌 자국
+  rubber: { crack: null, debris: null, sparks: 0, sound: playBoing },
+}
+
 const TOOLS = {
   hammer: { damage: 8, repeatMs: 150, debris: [2, 4], debrisSize: [2, 4.5], power: 7, shake: 5, vibrate: 12 },
   bat: { damage: 20, repeatMs: 280, debris: [7, 12], debrisSize: [3, 7], power: 11, shake: 11, vibrate: 35 },
@@ -38,7 +46,7 @@ export class Game {
 
   constructor(
     private canvas: HTMLCanvasElement,
-    private target: Target,
+    public target: Target,
     private onStats: (stats: GameStats) => void,
   ) {
     this.ctx = canvas.getContext('2d')!
@@ -63,7 +71,11 @@ export class Game {
     if (!this.running) this.parts = this.target.createParts(this.layout)
   }
 
-  start() {
+  start(target = this.target) {
+    if (target !== this.target) {
+      this.target = target
+      this.debris.setSurfaces(target.surfaces(this.layout), WORLD_W, this.layout.H)
+    }
     this.parts = this.target.createParts(this.layout)
     this.debris.clear()
     this.particles.clear()
@@ -132,18 +144,16 @@ export class Game {
     }
 
     this.hits++
-    const glass = part.isGlass(at)
+    const material = part.materialAt(at)
+    const m = MATERIALS[material]
     const big = this.tool === 'bat'
-    part.marks.push(
-      makeCrack(at, big ? rand(34, 52) : rand(16, 28), glass ? 'rgba(235, 245, 255, 0.9)' : 'rgba(0, 0, 0, 0.55)', big ? 1.6 : 1.1),
-    )
-    if (big || !glass) part.marks.push({ kind: 'dent', x: at.x, y: at.y, r: big ? rand(12, 18) : rand(5, 8) })
+    if (m.crack) part.marks.push(makeCrack(at, big ? rand(34, 52) : rand(16, 28), m.crack, big ? 1.6 : 1.1))
+    if (big || material !== 'glass') part.marks.push({ kind: 'dent', x: at.x, y: at.y, r: big ? rand(12, 18) : rand(5, 8) })
 
-    this.debris.spawn(at, glass ? ['#cfe9ff', '#9fd3ff', '#ffffff'] : part.debrisColors, Math.round(rand(tool.debris[0], tool.debris[1])), [tool.debrisSize[0], tool.debrisSize[1]], tool.power)
-    this.particles.sparks(at, big ? 10 : 5)
-    if (glass) playGlass(big ? 1 : 0.5)
-    else if (big) playCrash(0.7)
-    else playThud(0.8)
+    const count = Math.round(rand(tool.debris[0], tool.debris[1]) * (material === 'rubber' ? 0.4 : 1))
+    this.debris.spawn(at, m.debris ?? part.debrisColors, count, [tool.debrisSize[0], tool.debrisSize[1]], tool.power)
+    this.particles.sparks(at, Math.round((big ? 10 : 5) * m.sparks))
+    m.sound(big ? 1 : 0.5)
     this.shake = Math.max(this.shake, tool.shake)
     vibrate(tool.vibrate)
 
@@ -168,9 +178,16 @@ export class Game {
     this.particles.smoke(center, 8)
     this.particles.sparks(center, 18)
     playCrash(1.2)
-    if (part.id === 'monitor') playGlass(1.4)
+    const mat = part.materialAt(center)
+    if (mat === 'glass') playGlass(1.4)
+    if (mat === 'metal') playClang(1.3)
     this.shake = 18
     vibrate([40, 30, 80])
+
+    // 붙어 있던 부품도 같이 떨어져 나감 (차체가 박살 나면 유리·라이트도)
+    for (const child of this.parts) {
+      if (child.attachedTo === part.id && !child.destroyed) this.destroy(child, { x: child.rect.x + child.rect.w / 2, y: child.rect.y + child.rect.h / 2 })
+    }
 
     if (this.parts.every((p) => p.destroyed)) {
       this.finishedAt = performance.now()
