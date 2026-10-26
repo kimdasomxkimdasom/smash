@@ -27,7 +27,9 @@ const game = new Game($<HTMLCanvasElement>('#stage'), computer, (stats) => {
   if (stats.finished && !resultShown) {
     resultShown = true
     setTimeout(() => {
-      resultText.innerHTML = `<b>${stats.seconds.toFixed(1)}초</b> 만에 ${game.target.name}를 박살냈어요<br />총 <b>${stats.hits}번</b> 때렸어요. 속이 좀 시원해졌나요?`
+      const { done, total } = stats.bonus
+      const bonus = total > 0 ? `<br />숨은 소품 <b>${done}/${total}개</b>도 해치웠어요${done === total ? ' 🎉' : ''}` : ''
+      resultText.innerHTML = `<b>${stats.seconds.toFixed(1)}초</b> 만에 ${game.target.name}를 박살냈어요<br />총 <b>${stats.hits}번</b> 때렸어요. 속이 좀 시원해졌나요?${bonus}`
       // 연타하던 손가락에 버튼이 바로 눌리지 않게 잠깐 잠금
       resultScreen.classList.add('locked')
       resultScreen.classList.remove('hidden')

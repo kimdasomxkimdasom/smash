@@ -61,6 +61,32 @@ function drawMonitor(ctx: CanvasRenderingContext2D, part: Part, damage: number, 
     ctx.arc(cx, cy, 7, time / 150, time / 150 + Math.PI * 1.4)
     ctx.stroke()
 
+    // 부술수록 에러 창이 계속 쌓임
+    const errors = Math.floor(damage * 9)
+    for (let i = 0; i < errors; i++) {
+      const e = { x: s.x + 8 + i * 13, y: s.y + 6 + i * 9, w: 92, h: 40 }
+      ctx.fillStyle = '#f2f2f2'
+      ctx.fillRect(e.x, e.y, e.w, e.h)
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)'
+      ctx.lineWidth = 1
+      ctx.strokeRect(e.x, e.y, e.w, e.h)
+      ctx.fillStyle = '#c0392b'
+      ctx.fillRect(e.x, e.y, e.w, 10)
+      ctx.fillStyle = '#fff'
+      ctx.font = 'bold 7px sans-serif'
+      ctx.fillText('오류', e.x + 3, e.y + 7.5)
+      ctx.fillStyle = '#c0392b'
+      ctx.beginPath()
+      ctx.arc(e.x + 12, e.y + 25, 6, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#fff'
+      ctx.font = 'bold 9px sans-serif'
+      ctx.fillText('!', e.x + 10.5, e.y + 28.5)
+      ctx.fillStyle = '#222'
+      ctx.font = '7px sans-serif'
+      ctx.fillText(['알 수 없는 오류', '메모리 부족', '그냥 안 됨'][i % 3], e.x + 22, e.y + 28)
+    }
+
     // 지지직: 색 띠가 무작위로 번쩍
     if (damage > 0.3) {
       const rnd = seeded(Math.floor(time / 90))
@@ -141,7 +167,8 @@ function drawKeyboard(ctx: CanvasRenderingContext2D, part: Part, damage: number)
   roundRect(ctx, r, 5)
   ctx.fill()
 
-  // 키캡 — 망가질수록 빠진 키(구멍)가 늘어남
+  // 키캡 — 때린 자리 근처 키는 바로 빠지고(구멍), 망가질수록 다른 키도 랜덤으로 빠짐
+  const hits = part.marks.filter((m) => m.kind === 'dent')
   const rnd = seeded(7)
   const cols = 14
   const rows = 3
@@ -151,11 +178,78 @@ function drawKeyboard(ctx: CanvasRenderingContext2D, part: Part, damage: number)
     for (let col = 0; col < cols; col++) {
       const x = r.x + 6 + col * kw
       const y = r.y + 4 + row * kh
-      const missing = rnd() < damage * 0.9
+      const cx = x + kw / 2
+      const cy = y + kh / 2
+      const hitNear = hits.some((m) => Math.abs(m.x - cx) < kw * 0.9 + m.r * 0.3 && Math.abs(m.y - cy) < kh * 1.2)
+      const missing = rnd() < damage * 0.9 || hitNear
       ctx.fillStyle = missing ? '#2a2620' : '#ece7dc'
       ctx.fillRect(x + 0.8, y + 0.8, kw - 1.6, kh - 1.6)
     }
   }
+}
+
+// 포스트잇: 색 네모 + 손글씨. 탈수록 누렇게 → 까맣게
+function drawPostit(color: string, lines: string[], angle: number) {
+  return (ctx: CanvasRenderingContext2D, part: Part, damage: number) => {
+    const r = part.rect
+    ctx.save()
+    ctx.translate(r.x + r.w / 2, r.y + r.h / 2)
+    ctx.rotate(angle)
+    ctx.fillStyle = 'rgba(0,0,0,0.18)'
+    ctx.fillRect(-r.w / 2 + 2, -r.h / 2 + 2, r.w, r.h)
+    ctx.fillStyle = color
+    ctx.fillRect(-r.w / 2, -r.h / 2, r.w, r.h)
+    ctx.fillStyle = 'rgba(0,0,0,0.08)' // 위쪽 끈끈이 부분
+    ctx.fillRect(-r.w / 2, -r.h / 2, r.w, 5)
+    ctx.fillStyle = '#2b2b2b'
+    ctx.font = 'bold 7px sans-serif'
+    ctx.textAlign = 'center'
+    lines.forEach((text, i) => ctx.fillText(text, 0, -2 + i * 9 - (lines.length - 1) * 3))
+    if (damage > 0) {
+      ctx.fillStyle = `rgba(60, 35, 10, ${damage * 0.6})`
+      ctx.fillRect(-r.w / 2, -r.h / 2, r.w, r.h)
+    }
+    ctx.restore()
+    ctx.textAlign = 'start'
+  }
+}
+
+// 커피잔: 흰 머그 + 빨간 띠 + 모락모락 김
+function drawMug(ctx: CanvasRenderingContext2D, part: Part, _damage: number, time: number) {
+  const r = part.rect
+  const body = { x: r.x, y: r.y + 6, w: r.w - 8, h: r.h - 6 }
+  // 김
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)'
+  ctx.lineWidth = 1.6
+  for (let i = 0; i < 2; i++) {
+    const bx = body.x + 6 + i * 8
+    ctx.beginPath()
+    for (let k = 0; k <= 10; k++) {
+      const y = body.y - 2 - k * 2.2
+      const x = bx + Math.sin(time / 250 + k * 0.7 + i) * 2.2
+      if (k === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.stroke()
+  }
+  // 손잡이
+  ctx.strokeStyle = '#efece6'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.arc(body.x + body.w, body.y + body.h / 2, 5, -Math.PI / 2, Math.PI / 2)
+  ctx.stroke()
+  // 몸통
+  ctx.fillStyle = '#efece6'
+  ctx.beginPath()
+  ctx.roundRect(body.x, body.y, body.w, body.h, [2, 2, 5, 5])
+  ctx.fill()
+  ctx.fillStyle = '#d6332a'
+  ctx.fillRect(body.x, body.y + body.h * 0.45, body.w, 4)
+  // 커피 윗면
+  ctx.fillStyle = '#5a3418'
+  ctx.beginPath()
+  ctx.ellipse(body.x + body.w / 2, body.y + 1.5, body.w / 2 - 1, 2.5, 0, 0, Math.PI * 2)
+  ctx.fill()
 }
 
 export const computer: Target = {
@@ -197,10 +291,61 @@ export const computer: Target = {
         id: 'keyboard',
         name: '키보드',
         rect: { x: 44, y: g + 16, w: 214, h: 22 },
-        maxHp: 60,
+        maxHp: 45,
         debrisColors: ['#d8d2c4', '#ece7dc', '#b9b1a0'],
         materialAt: () => 'plastic',
         draw: drawKeyboard,
+      }),
+
+      // ─── 소품 (보너스): 파괴율에는 안 들어감 ───
+      make({
+        id: 'mug',
+        name: '커피잔',
+        rect: { x: 36, y: g - 22, w: 28, h: 34 },
+        maxHp: 5, // 망치 한 방에 깨지게
+        bonus: true,
+        debrisColors: ['#efece6', '#d6332a', '#ffffff'],
+        materialAt: () => 'ceramic',
+        // 깨지면 커피가 쏟아져서 책상에 얼룩
+        onDestroy: (fx) => {
+          fx.splash({ x: 48, y: g - 8 }, '#5a3418', 26)
+          fx.stain(54, g + 13, 30, 5, 'rgba(70, 38, 14, 0.75)')
+          fx.stain(30, g + 9, 12, 3, 'rgba(70, 38, 14, 0.6)')
+        },
+        draw: drawMug,
+      }),
+      make({
+        id: 'postit-meeting',
+        name: '포스트잇',
+        rect: { x: 226, y: g - 244, w: 30, h: 30 },
+        maxHp: 6,
+        bonus: true,
+        attachedTo: 'monitor',
+        debrisColors: ['#ffe066', '#f5d142'],
+        materialAt: () => 'paper',
+        draw: drawPostit('#ffe066', ['회의', '3시!!'], 0.12),
+      }),
+      make({
+        id: 'postit-report',
+        name: '포스트잇',
+        rect: { x: 30, y: g - 112, w: 30, h: 30 },
+        maxHp: 6,
+        bonus: true,
+        attachedTo: 'monitor',
+        debrisColors: ['#ff9ec7', '#f07aa8'],
+        materialAt: () => 'paper',
+        draw: drawPostit('#ff9ec7', ['보고서', '수정 v7'], -0.1),
+      }),
+      make({
+        id: 'postit-tower',
+        name: '포스트잇',
+        rect: { x: 300, y: g - 152, w: 30, h: 30 },
+        maxHp: 6,
+        bonus: true,
+        attachedTo: 'tower',
+        debrisColors: ['#9be59b', '#7cd17c'],
+        materialAt: () => 'paper',
+        draw: drawPostit('#9be59b', ['퇴근', '언제?'], 0.08),
       }),
     ]
   },

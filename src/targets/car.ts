@@ -148,6 +148,7 @@ export const car: Target = {
         maxHp: 230,
         debrisColors: metal,
         materialAt: () => 'metal',
+        onHit: (fx) => fx.alarm(4), // 차체를 치면 경보 삐뽀삐뽀
         draw: (ctx, part, damage, time) => {
           const r = part.rect
           ctx.fillStyle = paint.body
@@ -207,9 +208,11 @@ export const car: Target = {
         attachedTo: 'body',
         debrisColors: ['#fff6c8', '#ffe27a', '#ffffff'],
         materialAt: () => 'glass',
-        draw: (ctx, part, damage) => {
+        draw: (ctx, part, damage, time, scene) => {
           const r = part.rect
-          if (damage < 0.5) {
+          // 경보 중엔 깜빡깜빡
+          const lit = damage < 0.5 && (!scene.alarming || Math.floor(time / 250) % 2 === 0)
+          if (lit) {
             // 켜진 불빛
             const cx = r.x + r.w
             const cy = r.y + r.h / 2
@@ -221,7 +224,7 @@ export const car: Target = {
             ctx.arc(cx, cy, 60, 0, Math.PI * 2)
             ctx.fill()
           }
-          ctx.fillStyle = damage < 0.5 ? '#fff6c8' : '#5c5a4e'
+          ctx.fillStyle = lit ? '#fff6c8' : '#5c5a4e'
           ctx.beginPath()
           ctx.roundRect(r.x, r.y, r.w, r.h, [4, 9, 9, 4])
           ctx.fill()
@@ -235,12 +238,102 @@ export const car: Target = {
         attachedTo: 'body',
         debrisColors: ['#ff3b30', '#b3241c'],
         materialAt: () => 'glass',
-        draw: (ctx, part, damage) => {
+        draw: (ctx, part, damage, time, scene) => {
           const r = part.rect
-          ctx.fillStyle = damage < 0.5 ? '#ff3b30' : '#5a1a16'
+          const blink = scene.alarming && damage < 0.5 && Math.floor(time / 250) % 2 === 0
+          if (blink) {
+            const glow = ctx.createRadialGradient(r.x, r.y + r.h / 2, 0, r.x, r.y + r.h / 2, 40)
+            glow.addColorStop(0, 'rgba(255, 120, 40, 0.55)')
+            glow.addColorStop(1, 'rgba(255, 120, 40, 0)')
+            ctx.fillStyle = glow
+            ctx.beginPath()
+            ctx.arc(r.x, r.y + r.h / 2, 40, 0, Math.PI * 2)
+            ctx.fill()
+          }
+          ctx.fillStyle = damage >= 0.5 ? '#5a1a16' : blink ? '#ffb347' : '#ff3b30'
           ctx.beginPath()
           ctx.roundRect(r.x, r.y, r.w, r.h, [9, 4, 4, 9])
           ctx.fill()
+        },
+      }),
+
+      // ─── 소품 (보너스): 파괴율에는 안 들어감 ───
+      make({
+        id: 'air-freshener',
+        name: '방향제',
+        rect: { x: windows[1].x + 34, y: windows[1].y, w: 20, h: 34 },
+        maxHp: 5,
+        bonus: true,
+        attachedTo: 'cabin',
+        debrisColors: ['#2fa84f', '#1e7a38'],
+        materialAt: () => 'paper',
+        draw: (ctx, part, damage, time, scene) => {
+          const r = part.rect
+          const top = { x: r.x + r.w / 2, y: r.y + 1 }
+          // 대롱대롱 (경보 울리면 더 심하게 흔들림)
+          const angle = Math.sin(time / 420) * 0.15 + (scene.alarming ? Math.sin(time / 70) * 0.3 : 0)
+          ctx.save()
+          ctx.translate(top.x, top.y)
+          ctx.rotate(angle)
+          ctx.strokeStyle = 'rgba(255,255,255,0.8)'
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(0, 0)
+          ctx.lineTo(0, 10)
+          ctx.stroke()
+          // 나무 모양 (3단)
+          ctx.fillStyle = damage > 0 ? `rgb(${47 - damage * 30}, ${168 - damage * 120}, ${79 - damage * 50})` : '#2fa84f'
+          ctx.beginPath()
+          ctx.moveTo(0, 9)
+          ctx.lineTo(6, 15)
+          ctx.lineTo(3, 15)
+          ctx.lineTo(8, 21)
+          ctx.lineTo(4, 21)
+          ctx.lineTo(9, 28)
+          ctx.lineTo(-9, 28)
+          ctx.lineTo(-4, 21)
+          ctx.lineTo(-8, 21)
+          ctx.lineTo(-3, 15)
+          ctx.lineTo(-6, 15)
+          ctx.closePath()
+          ctx.fill()
+          ctx.fillStyle = '#7a5236'
+          ctx.fillRect(-1.5, 28, 3, 4)
+          ctx.restore()
+        },
+      }),
+      make({
+        id: 'parking-ticket',
+        name: '주차위반 딱지',
+        rect: { x: windows[0].x + 14, y: windows[0].y + 10, w: 34, h: 26 },
+        maxHp: 6,
+        bonus: true,
+        attachedTo: 'cabin',
+        debrisColors: ['#fff3b0', '#e0412b'],
+        materialAt: () => 'paper',
+        draw: (ctx, part, damage) => {
+          const r = part.rect
+          ctx.save()
+          ctx.translate(r.x + r.w / 2, r.y + r.h / 2)
+          ctx.rotate(-0.08)
+          ctx.fillStyle = '#fff3b0'
+          ctx.fillRect(-r.w / 2, -r.h / 2, r.w, r.h)
+          ctx.fillStyle = '#e0412b'
+          ctx.fillRect(-r.w / 2, -r.h / 2, r.w, 8)
+          ctx.fillStyle = '#fff'
+          ctx.font = 'bold 6px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.fillText('주차위반', 0, -r.h / 2 + 6.3)
+          ctx.fillStyle = '#2b2b2b'
+          ctx.font = 'bold 6.5px sans-serif'
+          ctx.fillText('과태료', 0, 3)
+          ctx.fillText('40,000원', 0, 10)
+          if (damage > 0) {
+            ctx.fillStyle = `rgba(60, 35, 10, ${damage * 0.6})`
+            ctx.fillRect(-r.w / 2, -r.h / 2, r.w, r.h)
+          }
+          ctx.restore()
+          ctx.textAlign = 'start'
         },
       }),
     ]

@@ -86,7 +86,8 @@ type Particle = {
   life: number
   maxLife: number
   size: number
-  kind: 'spark' | 'fire' | 'smoke'
+  kind: 'spark' | 'fire' | 'smoke' | 'drop'
+  color?: string
 }
 
 export class Particles {
@@ -109,6 +110,15 @@ export class Particles {
     }
   }
 
+  // 액체 방울 (커피 등): 튀었다가 떨어짐
+  drops(at: Point, color: string, count: number) {
+    for (let i = 0; i < count; i++) {
+      const a = rand(-Math.PI * 0.95, -Math.PI * 0.05)
+      const s = rand(1.5, 5)
+      this.list.push({ x: at.x, y: at.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, maxLife: rand(25, 45), size: rand(1.5, 3.5), kind: 'drop', color })
+    }
+  }
+
   // 부품이 박살 난 뒤 잠시 피어오르는 연기
   smoke(at: Point, count: number) {
     for (let i = 0; i < count; i++) {
@@ -121,7 +131,7 @@ export class Particles {
       p.life++
       p.x += p.vx
       p.y += p.vy
-      if (p.kind === 'spark') p.vy += 0.35
+      if (p.kind === 'spark' || p.kind === 'drop') p.vy += 0.35
       if (p.kind === 'smoke') p.size += 0.25
     }
     this.list = this.list.filter((p) => p.life < p.maxLife)
@@ -147,6 +157,13 @@ export class Particles {
         ctx.beginPath()
         ctx.arc(p.x, p.y, r, 0, Math.PI * 2)
         ctx.fill()
+      } else if (p.kind === 'drop') {
+        ctx.globalAlpha = 1 - t * t
+        ctx.fillStyle = p.color!
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.globalAlpha = 1
       } else {
         ctx.fillStyle = `rgba(70, 70, 75, ${0.35 * (1 - t)})`
         ctx.beginPath()
