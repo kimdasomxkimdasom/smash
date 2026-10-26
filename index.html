@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#1b1d24" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔨</text></svg>" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+    <title>SMASH! 스트레스 풀기</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="stage"></canvas>
+
+      <!-- 위: 파괴율, 시간 -->
+      <header id="hud">
+        <div class="meter"><div id="meter-fill"></div></div>
+        <div class="stats">
+          <span id="percent">0%</span>
+          <span id="timer">0.0s</span>
+        </div>
+      </header>
+
+      <!-- 아래: 도구 선택 -->
+      <nav id="tools">
+        <button data-tool="hammer" class="active"><span>🔨</span>망치</button>
+        <button data-tool="bat"><span>🏏</span>방망이</button>
+        <button data-tool="flame"><span>🔥</span>화염</button>
+      </nav>
+
+      <!-- 시작 화면 -->
+      <section id="start" class="overlay">
+        <h1>SMASH!</h1>
+        <p class="sub">스트레스 풀기</p>
+        <p class="desc">말 안 듣는 컴퓨터를<br />마음껏 부숴 보세요</p>
+        <button id="start-btn">부수러 가기</button>
+        <p class="hint">탭: 때리기 · 꾹 누르기: 연타 · 화염은 누른 채로 문지르기</p>
+      </section>
+
+      <!-- 결과 화면 -->
+      <section id="result" class="overlay hidden">
+        <h2>박살 완료!</h2>
+        <p id="result-text"></p>
+        <button id="again-btn">다시 부수기</button>
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

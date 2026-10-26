@@ -1,0 +1,183 @@
+:root {
+  --bg: #1b1d24;
+  --panel: #262934;
+  --text: #f4f1ea;
+  --accent: #ffcf3f;
+  --danger: #ff5a3c;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
+}
+
+#app {
+  position: relative;
+  max-width: 480px;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+#stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none; /* 화면 스크롤·확대 막고 게임 터치만 */
+}
+
+/* 위 HUD */
+#hud {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 12px);
+  left: 16px;
+  right: 16px;
+  pointer-events: none;
+}
+
+.meter {
+  height: 10px;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 0.12);
+  overflow: hidden;
+}
+
+#meter-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--danger));
+  transition: width 0.15s;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 아래 도구 */
+#tools {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+#tools button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0 7px;
+  border: 2px solid rgb(255 255 255 / 0.12);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#tools button span {
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+#tools button.active {
+  border-color: var(--accent);
+  background: #3a3423;
+  color: var(--accent);
+}
+
+/* 시작·결과 */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: rgb(15 16 21 / 0.82);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay h1 {
+  margin: 0;
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  color: var(--accent);
+  text-shadow: 4px 4px 0 var(--danger);
+  transform: rotate(-4deg);
+}
+
+.overlay h2 {
+  margin: 0 0 12px;
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--accent);
+}
+
+.overlay .sub {
+  margin: 4px 0 20px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.overlay .desc,
+#result-text {
+  margin: 0 0 28px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgb(244 241 234 / 0.8);
+}
+
+.overlay button {
+  padding: 14px 36px;
+  border: none;
+  border-radius: 99px;
+  background: var(--accent);
+  color: #1b1d24;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 900;
+  box-shadow: 0 4px 0 #b88a10;
+}
+
+.overlay button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #b88a10;
+}
+
+.overlay .hint {
+  margin-top: 24px;
+  font-size: 12px;
+  color: rgb(244 241 234 / 0.5);
+}
