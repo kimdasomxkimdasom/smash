@@ -1,5 +1,7 @@
 export type ToolId = 'hammer' | 'bat' | 'flame'
 
+export type Material = 'glass' | 'plastic' | 'metal' | 'rubber'
+
 export type Rect = { x: number; y: number; w: number; h: number }
 
 export type Point = { x: number; y: number }
@@ -21,8 +23,10 @@ export type Part = {
   marks: Mark[]
   /** 파편 색 */
   debrisColors: string[]
-  /** 이 좌표를 때리면 유리 깨지는 소리·흰 금 (모니터 화면 등) */
-  isGlass: (p: Point) => boolean
+  /** 때린 곳의 재질 → 소리, 금 색깔, 파편 (모니터 화면 = 유리 등) */
+  materialAt: (p: Point) => Material
+  /** 이 부품이 붙어 있는 부품 id. 그 부품이 박살 나면 같이 떨어져 나감 (예: 차 유리 → 차체) */
+  attachedTo?: string
   /** 부품 그리기. damage = 0(멀쩡) ~ 1(박살 직전) */
   draw: (ctx: CanvasRenderingContext2D, part: Part, damage: number, time: number) => void
 }
